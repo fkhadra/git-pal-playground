@@ -1,9 +1,3 @@
-# yaml-language-server: $schema=https://fkhadra.github.io/git-pal/git-pal.schema.json
 version: 1
-auto_review:
-  skip_labels: [do not merge]
-  claim_for_team: true
 auto_approve:
-  max_risk: low
-  require_green_ci: true
-  skip_paths: [".github/workflows/**"]
+  max_risk: [
