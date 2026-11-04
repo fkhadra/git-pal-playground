@@ -37,10 +37,10 @@ jobs:
             docs)
               echo "Run $GITHUB_RUN_ID: docs only change." >> README.md ;;
             workflow)
-              echo "# run $GITHUB_RUN_ID" >> .github/workflows/ci.yml ;;
+              echo "# run $GITHUB_RUN_ID" >> infra/deploy.sh ;;
             loosen-policy)
               sed -i '/skip_paths/d' .github/git-pal.yml
-              echo "# run $GITHUB_RUN_ID" >> .github/workflows/ci.yml ;;
+              echo "# run $GITHUB_RUN_ID" >> infra/deploy.sh ;;
             broken-base)
               base=broken-policy
               git checkout -q broken-policy

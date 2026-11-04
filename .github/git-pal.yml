@@ -8,4 +8,4 @@ auto_approve:
   enabled: true
   max_risk: low
   require_green_ci: true
-  skip_paths: [".github/workflows/**"]
+  skip_paths: [".github/workflows/**", "infra/**"]
