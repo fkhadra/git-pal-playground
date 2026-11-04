@@ -1,0 +1,63 @@
+name: Open test PR
+on:
+  workflow_dispatch:
+    inputs:
+      scenario:
+        description: Change the PR makes
+        type: choice
+        options: [docs, workflow, loosen-policy, broken-base, labeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+  statuses: write
+  issues: write
+
+jobs:
+  open:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      SCENARIO: ${{ inputs.scenario }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Make the change
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          base=main
+          label=""
+          branch="test/$SCENARIO-$GITHUB_RUN_ID"
+
+          case "$SCENARIO" in
+            docs)
+              echo "Run $GITHUB_RUN_ID: docs only change." >> README.md ;;
+            workflow)
+              echo "# run $GITHUB_RUN_ID" >> .github/workflows/ci.yml ;;
+            loosen-policy)
+              sed -i '/skip_paths/d' .github/git-pal.yml
+              echo "# run $GITHUB_RUN_ID" >> .github/workflows/ci.yml ;;
+            broken-base)
+              base=broken-policy
+              git checkout -q broken-policy
+              echo "Run $GITHUB_RUN_ID: docs only change." >> README.md ;;
+            labeled)
+              label="do not merge"
+              gh label create "$label" --force
+              echo "Run $GITHUB_RUN_ID: docs only change." >> README.md ;;
+          esac
+
+          git checkout -q -b "$branch"
+          git commit -qam "test: $SCENARIO scenario"
+          git push -q origin "$branch"
+
+          args=(--base "$base" --head "$branch" --title "test: $SCENARIO ($GITHUB_RUN_ID)" --body "Opened by the playground workflow, scenario \`$SCENARIO\`.")
+          if [ -n "$label" ]; then args+=(--label "$label"); fi
+          gh pr create "${args[@]}"
+
+          # workflows don't run on pushes made with this token, report CI ourselves
+          gh api "repos/$GITHUB_REPOSITORY/statuses/$(git rev-parse HEAD)" -f state=success -f context=ci
